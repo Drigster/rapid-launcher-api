@@ -1,0 +1,52 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator kysely {
+  provider = "prisma-kysely"
+
+  output   = "../src/lib/db"
+  fileName = "schema.d.ts"
+}
+
+model User {
+  /// @kyselyType(`u_${string}`)
+  id String @id
+
+  username String    @unique
+  email    String    @unique
+  password String
+  sessions Session[]
+
+  @@index([username])
+  @@index([email])
+}
+
+model Server {
+  /// @kyselyType(`s_${string}`)
+  id String @id
+
+  name       String @unique
+  color_code String
+  image_url  String
+}
+
+model News {
+  /// @kyselyType(`n_${string}`)
+  id String @id
+
+  title String
+  body  String
+  image String
+
+  redirect_url String
+}
+
+model Session {
+  id         String @id
+  expires_at Int
+
+  /// @kyselyType(`u_${string}`)
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id])
+}
