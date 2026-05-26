@@ -21,7 +21,8 @@ export type Server = {
     id: `s_${string}`;
     name: string;
     color_code: string;
-    image_url: string;
+    image_url: string | null;
+    callback_url: string;
 };
 export type Session = {
     id: string;
@@ -39,6 +40,7 @@ export type User = {
     username: string;
     email: string;
     password: string;
+    server_id: string | null;
 };
 export type DB = {
     News: News;

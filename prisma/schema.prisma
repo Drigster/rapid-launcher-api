@@ -18,6 +18,8 @@ model User {
   password String
   sessions Session[]
 
+  server_id String?
+
   @@index([username])
   @@index([email])
 }
@@ -28,7 +30,9 @@ model Server {
 
   name       String @unique
   color_code String
-  image_url  String
+  image_url  String?
+
+  callback_url String
 }
 
 model News {

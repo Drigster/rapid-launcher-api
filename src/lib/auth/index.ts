@@ -5,7 +5,7 @@ import {
 import { sha256 } from "@oslojs/crypto/sha2";
 import { generateRandomString, type RandomReader } from "@oslojs/crypto/random";
 import type { Selectable } from "kysely";
-import { db } from "../db";
+import { db } from "../../index";
 import type { DB } from "../db/schema";
 
 const ONE_DAY = 1000 * 60 * 60 * 24;
@@ -66,6 +66,7 @@ export async function validateSessionToken(
       "u.username",
       "u.email",
       "u.password",
+      "u.server_id",
     ])
     .where("s.id", "=", sessionId)
     .executeTakeFirst();
@@ -86,6 +87,7 @@ export async function validateSessionToken(
     username: row.username,
     email: row.email,
     password: row.password,
+    server_id: row.server_id,
   };
   if (Date.now() >= session.expiresAt.getTime() - ONE_DAY * 15) {
     session.expiresAt = new Date(Date.now() + ONE_DAY * 30);
