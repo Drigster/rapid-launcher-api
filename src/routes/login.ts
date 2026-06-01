@@ -8,8 +8,8 @@ import { createSession, generateSessionToken } from "../lib/auth";
 const router = Router();
 
 const loginSchema = v.object({
-	username: v.pipe(v.string(), v.minLength(3), v.maxLength(20)),
-	password: v.pipe(v.string(), v.minLength(8)),
+	username: v.pipe(v.string()),
+	password: v.pipe(v.string()),
 });
 
 router.post("/login", async (req, res) => {
@@ -29,7 +29,7 @@ router.post("/login", async (req, res) => {
 		return res.status(401).json({ error: "Username or password incorrect" });
 	}
 
-	if (await compare(data.output.password, user.password) == false) {
+	if ((await compare(data.output.password, user.password)) == false) {
 		return res.status(401).json({ error: "Username or password incorrect" });
 	}
 
@@ -45,7 +45,10 @@ router.post("/login", async (req, res) => {
 		},
 	};
 
-	res.status(200).json(userSession);
+	res.status(200).json({
+		success: true,
+		data: userSession,
+	});
 });
 
 export default router;

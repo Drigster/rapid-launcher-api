@@ -11,7 +11,10 @@ export default async function (
 	}
 	if (bearer.startsWith("Bearer ")) {
 		const authToken = bearer.slice(7);
-		if (authToken == undefined || authToken.length <= 0 && authToken !== process.env.AUTH_TOKEN) {
+		if (
+			authToken == undefined ||
+			(authToken.length <= 0 && authToken !== process.env.AUTH_TOKEN)
+		) {
 			return res.status(401).json({ error: "Unauthorized" });
 		}
 	}

@@ -41,6 +41,9 @@ export type User = {
     email: string;
     password: string;
     server_id: string | null;
+    verified_at: Timestamp | null;
+    verify_code: string | null;
+    newsletter: Generated<boolean>;
 };
 export type DB = {
     News: News;

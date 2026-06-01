@@ -1,10 +1,10 @@
 type User = {
-    id: `u_${string}`;
-    username: string;
-}
+	id: `u_${string}`;
+	username: string;
+};
 
 type UserSession = {
-    access_token: string;
-    expires_at: number;
-    user: User
+	access_token: string;
+	expires_at: number;
+	user: User;
 };

@@ -20,6 +20,11 @@ model User {
 
   server_id String?
 
+  verified_at DateTime?
+  verify_code String?
+
+  newsletter Boolean @default(false)
+
   @@index([username])
   @@index([email])
 }
@@ -28,7 +33,7 @@ model Server {
   /// @kyselyType(`s_${string}`)
   id String @id
 
-  name       String @unique
+  name       String  @unique
   color_code String
   image_url  String?
 

@@ -9,7 +9,6 @@ import { posix } from "node:path";
 const router = Router();
 
 const joinServerSchema = v.object({
-	username: v.pipe(v.string()),
 	access_token: v.pipe(v.string()),
 	server_id: v.pipe(v.string()),
 });
@@ -26,10 +25,14 @@ router.post("/joinServer", async (req, res) => {
 		return res.status(400).json({ errors: data.issues });
 	}
 
-	const { session, user } = await validateSessionToken(data.output.access_token);
+	const { session, user } = await validateSessionToken(
+		data.output.access_token,
+	);
 
-	if (!session || !user || user.username != data.output.username) {
-		return res.status(403).json({ error: "Session is expired or invalid, or does not match username" });
+	if (!session || !user) {
+		return res
+			.status(403)
+			.json({ error: "Сессия истекла или недействительна" });
 	}
 
 	if (user.server_id == null) {
@@ -64,6 +67,7 @@ router.post("/joinServer", async (req, res) => {
 
 	const callback_url = URL.parse(server.callback_url);
 	if (!callback_url) {
+		console.log("Server callback url is invalid");
 		await db
 			.updateTable("User")
 			.set({
@@ -93,10 +97,10 @@ router.post("/joinServer", async (req, res) => {
 			return res.status(200).json({ success: true });
 		}
 
-		return res.status(200).json({ error: "Player is already in the server" });
+		return res.status(200).json({ error: "Игрок уже находится на сервере" });
 	} catch (e) {
 		console.error(e);
-		return res.status(500).json({ error: "Internal server error" });
+		return res.status(500).json({ error: "Ошибка сервера, попробуйте позже" });
 	}
 });
 
@@ -125,7 +129,16 @@ router.post("/checkServer", async (req, res) => {
 	return res.status(200).json({ success: true });
 });
 
+// TEMP: Server API dummy
 router.post("/checkUser", async (req, res) => {
+	if (req.body.username == "test") {
+		return res.status(200).json({ success: true });
+	}
+
+	return res.status(200).json({ success: false });
+});
+
+router.post("/getUser", async (req, res) => {
 	if (req.body.username == "test") {
 		return res.status(200).json({ success: true });
 	}
