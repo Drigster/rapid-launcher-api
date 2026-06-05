@@ -9,13 +9,13 @@ import { posix } from "node:path";
 const router = Router();
 
 const joinServerSchema = v.object({
-	access_token: v.pipe(v.string()),
-	server_id: v.pipe(v.string()),
+	access_token: v.string(),
+	server_id: v.string(),
 });
 
 const checkServerSchema = v.object({
-	username: v.pipe(v.string()),
-	server_id: v.pipe(v.string()),
+	username: v.string(),
+	server_id: v.string(),
 });
 
 router.post("/joinServer", async (req, res) => {
@@ -32,7 +32,7 @@ router.post("/joinServer", async (req, res) => {
 	if (!session || !user) {
 		return res
 			.status(403)
-			.json({ error: "Сессия истекла или недействительна" });
+			.json({ error: "Сессия устарела или недействительна" });
 	}
 
 	if (user.server_id == null) {

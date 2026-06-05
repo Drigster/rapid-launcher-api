@@ -67,6 +67,11 @@ export async function validateSessionToken(
 			"u.email",
 			"u.password",
 			"u.server_id",
+			"u.newsletter",
+			"u.verified_at",
+			"u.pending_email",
+			"u.email_verify_hash",
+			"u.email_verify_expires_at",
 		])
 		.where("s.id", "=", sessionId)
 		.executeTakeFirst();
@@ -88,6 +93,11 @@ export async function validateSessionToken(
 		email: row.email,
 		password: row.password,
 		server_id: row.server_id,
+		newsletter: row.newsletter,
+		verified_at: row.verified_at,
+		pending_email: row.pending_email,
+		email_verify_hash: row.email_verify_hash,
+		email_verify_expires_at: row.email_verify_expires_at,
 	};
 	if (Date.now() >= session.expiresAt.getTime() - ONE_DAY * 15) {
 		session.expiresAt = new Date(Date.now() + ONE_DAY * 30);
@@ -106,6 +116,12 @@ export async function invalidateSession(sessionId: string): Promise<void> {
 	await db.deleteFrom("Session").where("id", "=", sessionId).execute();
 }
 
+export async function invalidateUserSessions(
+	userId: `u_${string}`,
+): Promise<void> {
+	await db.deleteFrom("Session").where("user_id", "=", userId).execute();
+}
+
 export type SessionValidationResult =
 	| { session: Session; user: User }
 	| { session: null; user: null };
@@ -117,3 +133,11 @@ export interface Session {
 }
 
 export type User = Selectable<DB["User"]>;
+
+export function generateOtpCode(length = 6): string {
+	return generateRandomString(random, "0123456789", length);
+}
+
+export function hashOtp(code: string): string {
+	return encodeHexLowerCase(sha256(new TextEncoder().encode(code)));
+}

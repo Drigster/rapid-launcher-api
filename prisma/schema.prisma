@@ -21,7 +21,10 @@ model User {
   server_id String?
 
   verified_at DateTime?
-  verify_code String?
+
+  pending_email String?
+  email_verify_hash String?
+  email_verify_expires_at DateTime?
 
   newsletter Boolean @default(false)
 

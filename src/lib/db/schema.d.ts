@@ -42,7 +42,9 @@ export type User = {
     password: string;
     server_id: string | null;
     verified_at: Timestamp | null;
-    verify_code: string | null;
+    pending_email: string | null;
+    email_verify_hash: string | null;
+    email_verify_expires_at: Timestamp | null;
     newsletter: Generated<boolean>;
 };
 export type DB = {

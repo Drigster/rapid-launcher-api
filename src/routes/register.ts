@@ -4,6 +4,13 @@ import { nanoid } from "nanoid";
 import { db } from "..";
 import { hash } from "bcryptjs";
 import { sendEmail } from "../lib/mailer";
+import {
+	createSession,
+	generateOtpCode,
+	generateSessionToken,
+	hashOtp,
+	validateSessionToken,
+} from "../lib/auth";
 
 const router = Router();
 
@@ -22,8 +29,12 @@ const registerSchema = v.object({
 });
 
 const verifySchema = v.object({
-	user_id: v.pipe(v.string()),
-	code: v.pipe(v.string()),
+	access_token: v.string(),
+	code: v.string(),
+});
+
+const resendVerifySchema = v.object({
+	access_token: v.string(),
 });
 
 router.post("/register", async (req, res) => {
@@ -55,7 +66,8 @@ router.post("/register", async (req, res) => {
 		return res.status(200).json({ success: true });
 	}
 
-	const verify_code = Math.floor(100000 + Math.random() * 900000);
+	const verify_code = generateOtpCode();
+	const verify_code_hash = hashOtp(verify_code);
 
 	const user_id: `u_${string}` = `u_${nanoid()}`;
 	await db
@@ -65,21 +77,31 @@ router.post("/register", async (req, res) => {
 			username: data.output.username,
 			email: data.output.email,
 			password: await hash(data.output.password, 12),
-			verify_code: verify_code.toString(),
 			newsletter: data.output.subscribe,
+			email_verify_hash: verify_code_hash,
+			email_verify_expires_at: new Date(Date.now() + 1000 * 60 * 5),
 		})
 		.execute();
 
 	await sendEmail(
-		"Код для подтверждения регистрации: " + verify_code,
+		"Код для подтверждения регистрации: " +
+			verify_code +
+			"\nВремя действия кода: 5 минут.",
 		data.output.email,
 	);
 
+	const session_token = generateSessionToken();
+	const session = await createSession(session_token, user_id);
+
+	const userSession: UserSession = {
+		access_token: session_token,
+		expires_at: session.expiresAt.getTime() / 1000,
+		user: null,
+	};
+
 	return res.status(200).json({
 		success: true,
-		data: {
-			user_id: user_id,
-		},
+		...userSession,
 	});
 });
 
@@ -91,25 +113,87 @@ router.post("/register/verify", async (req, res) => {
 		return res.status(400).json({ errors: data.issues });
 	}
 
-	console.log(data.output);
+	const { session, user } = await validateSessionToken(
+		data.output.access_token,
+	);
 
-	let user = await db
-		.selectFrom("User")
-		.select(["id", "verify_code"])
-		.where("id", "=", data.output.user_id as any)
-		.executeTakeFirst();
+	if (!session || !user) {
+		return res
+			.status(401)
+			.json({ error: "Сессия устарела или недействительна" });
+	}
 
-	if (!user || user.verify_code != data.output.code) {
-		return res.status(400).json({ errors: ["Invalid user id or code"] });
+	if (
+		!user ||
+		!user.email_verify_hash ||
+		!user.email_verify_expires_at ||
+		user.email_verify_expires_at < new Date()
+	) {
+		return res.status(400).json({
+			error: "Запрос на подтверждение почты не существует или устарел",
+		});
 	}
 
 	await db
 		.updateTable("User")
+		.where("id", "=", user.id)
 		.set({
-			verify_code: null,
+			email_verify_hash: null,
+			email_verify_expires_at: null,
 			verified_at: new Date(),
 		})
 		.execute();
+
+	const userSession: UserSession = {
+		access_token: data.output.access_token,
+		expires_at: session.expiresAt.getTime() / 1000,
+		user: {
+			id: user.id,
+			username: user.username,
+			email: user.email,
+			verified: user.verified_at != null,
+		},
+	};
+
+	return res.status(200).json({ success: true, ...userSession });
+});
+
+router.post("/register/resendVerify", async (req, res) => {
+	const data = v.safeParse(resendVerifySchema, req.body);
+
+	if (!data.success) {
+		console.log(data.issues);
+		return res.status(400).json({ errors: data.issues });
+	}
+
+	const { session, user } = await validateSessionToken(
+		data.output.access_token,
+	);
+
+	if (!session || !user) {
+		return res
+			.status(401)
+			.json({ error: "Сессия устарела или недействительна" });
+	}
+
+	const verify_code = generateOtpCode();
+	const verify_code_hash = hashOtp(verify_code);
+
+	await db
+		.updateTable("User")
+		.set({
+			email_verify_hash: verify_code_hash,
+			email_verify_expires_at: new Date(Date.now() + 1000 * 60 * 5),
+		})
+		.where("id", "=", user.id)
+		.execute();
+
+	await sendEmail(
+		"Код для подтверждения регистрации: " +
+			verify_code +
+			"\nВремя действия кода: 5 минут.",
+		user.email,
+	);
 
 	return res.status(200).json({ success: true });
 });

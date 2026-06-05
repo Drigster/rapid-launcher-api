@@ -3,6 +3,7 @@ import express from "express";
 import Register from "./routes/register";
 import Login from "./routes/login";
 import Server from "./routes/server";
+import Recovery from "./routes/recovery";
 
 import { init_db } from "./lib/db";
 import { initMailer } from "./lib/mailer";
@@ -22,9 +23,10 @@ app.use((req, res, next) => {
 app.use(Register);
 app.use(Login);
 app.use(Server);
+app.use(Recovery);
 
 app.use((req, res) => {
-	res.status(404).json({ error: "Route not found" });
+	res.status(404).json({ error: "API ERROR: Route not found" });
 });
 
 // Global error handler - must be last
@@ -33,12 +35,12 @@ const errorHandler = (err, req, res, next) => {
 
 	// Handle JSON parsing errors
 	if (err instanceof SyntaxError && "body" in err) {
-		return res.status(400).json({ error: "Invalid JSON" });
+		return res.status(400).json({ error: "API ERROR: Invalid JSON" });
 	}
 
 	// Handle other errors
 	const status = err.status || err.statusCode || 500;
-	const message = err.message || "Internal Server Error";
+	const message = err.message || "API ERROR: Internal Server Error";
 
 	res.status(status).json({ error: message });
 };
