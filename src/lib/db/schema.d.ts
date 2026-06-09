@@ -19,9 +19,13 @@ export type Server = {
      * @kyselyType(`s_${string}`)
      */
     id: `s_${string}`;
+    key: string;
     name: string;
     color_code: string;
     image_url: string | null;
+    monitoring_image_url: string | null;
+    colored_comment: string | null;
+    comment: string | null;
     callback_url: string;
 };
 export type Session = {

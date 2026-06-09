@@ -22,8 +22,8 @@ model User {
 
   verified_at DateTime?
 
-  pending_email String?
-  email_verify_hash String?
+  pending_email           String?
+  email_verify_hash       String?
   email_verify_expires_at DateTime?
 
   newsletter Boolean @default(false)
@@ -34,11 +34,16 @@ model User {
 
 model Server {
   /// @kyselyType(`s_${string}`)
-  id String @id
+  id  String @id
+  key String @unique
 
-  name       String  @unique
-  color_code String
-  image_url  String?
+  name                 String  @unique
+  color_code           String
+  image_url            String?
+  monitoring_image_url String?
+
+  colored_comment String?
+  comment         String?
 
   callback_url String
 }

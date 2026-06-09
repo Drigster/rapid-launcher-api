@@ -18,6 +18,10 @@ const checkServerSchema = v.object({
 	server_id: v.string(),
 });
 
+const getServersSchema = v.object({
+	access_token: v.string(),
+});
+
 router.post("/joinServer", async (req, res) => {
 	const data = v.safeParse(joinServerSchema, req.body);
 
@@ -127,6 +131,28 @@ router.post("/checkServer", async (req, res) => {
 	}
 
 	return res.status(200).json({ success: true });
+});
+
+router.post("/getServers", async (req, res) => {
+	const data = v.safeParse(getServersSchema, req.body);
+
+	if (!data.success) {
+		return res.status(400).json({ errors: data.issues });
+	}
+
+	const { session, user } = await validateSessionToken(
+		data.output.access_token,
+	);
+
+	if (!session || !user) {
+		return res
+			.status(403)
+			.json({ error: "Сессия устарела или недействительна" });
+	}
+
+	const servers = await db.selectFrom("Server").selectAll().execute();
+
+	return res.status(200).json({ success: true, servers });
 });
 
 // TEMP: Server API dummy

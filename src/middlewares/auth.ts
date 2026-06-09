@@ -13,7 +13,8 @@ export default async function (
 		const authToken = bearer.slice(7);
 		if (
 			authToken == undefined ||
-			(authToken.length <= 0 && authToken !== process.env.AUTH_TOKEN)
+			authToken.length <= 0 ||
+			authToken !== process.env.AUTH_TOKEN
 		) {
 			return res.status(401).json({ error: "Unauthorized" });
 		}
