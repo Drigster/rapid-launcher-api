@@ -50,9 +50,7 @@ router.post("/register", async (req, res) => {
 		.executeTakeFirst();
 
 	if (existingUser) {
-		// TODO: Send email reminder
-		console.log("User already exists, sending email reminder");
-		return res.status(200).json({ success: true });
+		return res.status(400).json({ error: ["Пользователь с таким именем уже существует"] });
 	}
 
 	let existingEmail = await db
@@ -61,9 +59,7 @@ router.post("/register", async (req, res) => {
 		.executeTakeFirst();
 
 	if (existingEmail) {
-		// TODO: Send email reminder
-		console.log("User already exists, sending email reminder 2");
-		return res.status(200).json({ success: true });
+		return res.status(400).json({ error: ["Пользователь с такой электронной почтой уже существует"] });
 	}
 
 	const verify_code = generateOtpCode();
@@ -85,8 +81,8 @@ router.post("/register", async (req, res) => {
 
 	await sendEmail(
 		"Код для подтверждения регистрации: " +
-			verify_code +
-			"\nВремя действия кода: 5 минут.",
+		verify_code +
+		"\nВремя действия кода: 5 минут.",
 		data.output.email,
 	);
 
@@ -113,7 +109,7 @@ router.post("/register/verify", async (req, res) => {
 		return res.status(400).json({ errors: data.issues });
 	}
 
-	const { session, user } = await validateSessionToken(
+	let { session, user } = await validateSessionToken(
 		data.output.access_token,
 	);
 
@@ -130,11 +126,11 @@ router.post("/register/verify", async (req, res) => {
 		user.email_verify_expires_at < new Date()
 	) {
 		return res.status(400).json({
-			error: "Запрос на подтверждение почты не существует или устарел",
+			error: "Код не верен или устарел",
 		});
 	}
 
-	await db
+	user = await db
 		.updateTable("User")
 		.where("id", "=", user.id)
 		.set({
@@ -142,7 +138,8 @@ router.post("/register/verify", async (req, res) => {
 			email_verify_expires_at: null,
 			verified_at: new Date(),
 		})
-		.execute();
+		.returningAll()
+		.executeTakeFirstOrThrow();
 
 	const userSession: UserSession = {
 		access_token: data.output.access_token,
@@ -190,8 +187,8 @@ router.post("/register/resendVerify", async (req, res) => {
 
 	await sendEmail(
 		"Код для подтверждения регистрации: " +
-			verify_code +
-			"\nВремя действия кода: 5 минут.",
+		verify_code +
+		"\nВремя действия кода: 5 минут.",
 		user.email,
 	);
 
