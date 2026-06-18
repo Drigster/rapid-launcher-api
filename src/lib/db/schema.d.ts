@@ -27,6 +27,7 @@ export type Server = {
     colored_comment: string | null;
     comment: string | null;
     callback_url: string;
+    order: number;
 };
 export type Session = {
     id: string;

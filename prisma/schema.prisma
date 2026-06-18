@@ -46,6 +46,8 @@ model Server {
   comment         String?
 
   callback_url String
+
+  order Int @unique
 }
 
 model News {
