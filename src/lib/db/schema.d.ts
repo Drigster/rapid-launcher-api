@@ -11,7 +11,14 @@ export type News = {
     id: `n_${string}`;
     title: string;
     body: string;
-    image: string;
+    image_url: string;
+    is_featured: boolean;
+    featured_button_text: string | null;
+    featured_button_url: string | null;
+    /**
+     * @kyselyType(Timestamp)
+     */
+    created_at: Timestamp;
     redirect_url: string;
 };
 export type Server = {

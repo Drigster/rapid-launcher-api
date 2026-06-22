@@ -54,9 +54,16 @@ model News {
   /// @kyselyType(`n_${string}`)
   id String @id
 
-  title String
-  body  String
-  image String
+  title     String
+  body      String
+  image_url String
+
+  is_featured          Boolean
+  featured_button_text String?
+  featured_button_url  String?
+
+  /// @kyselyType(Timestamp)
+  created_at String
 
   redirect_url String
 }

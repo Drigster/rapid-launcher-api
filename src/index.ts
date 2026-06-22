@@ -4,6 +4,7 @@ import Register from "./routes/register";
 import Login from "./routes/login";
 import Server from "./routes/server";
 import Recovery from "./routes/recovery";
+import News from "./routes/news";
 
 import { init_db } from "./lib/db";
 import { initMailer } from "./lib/mailer";
@@ -25,6 +26,7 @@ app.use(Register);
 app.use(Login);
 app.use(Server);
 app.use(Recovery);
+app.use(News);
 
 app.use((req, res) => {
 	res.status(404).json({ error: "API ERROR: Route not found" });
@@ -46,7 +48,7 @@ const errorHandler = (err, req, res, next) => {
 	res.status(status).json({ error: message });
 };
 
-app.use(errorHandler)
+app.use(errorHandler);
 
 const server = app.listen(8080, (error) => {
 	if (error) {
