@@ -46,6 +46,8 @@ const errorHandler = (err, req, res, next) => {
 	res.status(status).json({ error: message });
 };
 
+app.use(errorHandler)
+
 const server = app.listen(8080, (error) => {
 	if (error) {
 		console.error(error);
