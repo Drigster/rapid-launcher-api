@@ -5,6 +5,7 @@ import { validateSessionToken } from "../lib/auth";
 import axios from "axios";
 import AuthMiddleware from "../middlewares/auth";
 import { posix } from "node:path";
+import { Client } from "mtasa";
 
 const router = Router();
 
@@ -183,25 +184,30 @@ router.post("/getServerUser", async (req, res) => {
 		return res.status(200).json({ success: false });
 	}
 
-	const callback_url = URL.parse(server.callback_url);
-	if (!callback_url) {
-		return res.status(200).json({ success: false });
-	}
-
-	callback_url.pathname = posix.join(callback_url.pathname, "getUser");
 	try {
-		const response = await axios.post(callback_url.href, {
-			user_id: user.id,
-		});
+		const mta = new Client(server.ip, server.port, "rapid_launcher_api", "1234");
+		const response = await mta.resources.rm_launcher_api
+			.GetUserServerData( 1 )
+			.catch(() => {
+				return res.status(500).json({ success: false, error: "Ошибка сервера, попробуйте позже" });
+			});
 
-		if (response.data?.success != true) {
-			return res.status(200).json({ success: false });
+		let data;
+		try {
+			data = JSON.parse(response);
+		} catch (e) {
+			console.error(e);
+			return res.status(500).json({ success: false, error: "Ошибка сервера, попробуйте позже" });
 		}
 
-		return res.status(500).json({ success: true, userData: response.data.userData });
+		if (data.success != true) {
+			return res.status(500).json({ success: false, error: "Ошибка сервера, попробуйте позже" });
+		}
+
+		return res.status(200).json({ success: true, userData: data.userData });
 	} catch (e) {
 		console.error(e);
-		return res.status(500).json({ error: "Ошибка сервера, попробуйте позже" });
+		return res.status(500).json({ success: false, error: "Ошибка сервера, попробуйте позже" });
 	}
 });
 
@@ -212,20 +218,6 @@ router.post("/checkUser", async (req, res) => {
 	}
 
 	return res.status(200).json({ success: false });
-});
-
-const ONE_HOUR = 1000 * 60 * 60;
-const ONE_DAY = ONE_HOUR * 24;
-router.post("/getUser", async (req, res) => {
-	const userData = {
-		playTimeSeconds: 458700,
-		lastPlayedTimestamp: new Date(),
-		subscription: "Платина",
-		subscriptionExpiresAt: new Date(Date.now() + ONE_DAY * 14 + ONE_HOUR * 20),
-		credits: 1000
-	}
-
-	return res.status(200).json({ success: true, userData: userData });
 });
 
 export default router;

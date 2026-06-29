@@ -47,6 +47,9 @@ model Server {
 
   callback_url String
 
+  ip           String
+  port         Int
+
   order Int @unique
 }
 
