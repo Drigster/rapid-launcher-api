@@ -5,6 +5,7 @@ import Login from "./routes/login";
 import Server from "./routes/server";
 import Recovery from "./routes/recovery";
 import News from "./routes/news";
+import Notifications from "./routes/notifications";
 
 import { init_db } from "./lib/db";
 import { initMailer } from "./lib/mailer";
@@ -27,6 +28,7 @@ app.use(Login);
 app.use(Server);
 app.use(Recovery);
 app.use(News);
+app.use(Notifications);
 
 app.use((req, res) => {
 	res.status(404).json({ error: "API ERROR: Route not found" });

@@ -21,6 +21,19 @@ export type News = {
     created_at: Timestamp;
     redirect_url: string;
 };
+export type Notification = {
+    /**
+     * @kyselyType(`nt_${string}`)
+     */
+    id: `nt_${string}`;
+    title: string;
+    body: string;
+    /**
+     * @kyselyType(Timestamp)
+     */
+    created_at: Timestamp;
+    hidden: Generated<boolean>;
+};
 export type Server = {
     /**
      * @kyselyType(`s_${string}`)
@@ -63,6 +76,7 @@ export type User = {
 };
 export type DB = {
     News: News;
+    Notification: Notification;
     Server: Server;
     Session: Session;
     User: User;

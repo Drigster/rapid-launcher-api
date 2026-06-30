@@ -47,8 +47,8 @@ model Server {
 
   callback_url String
 
-  ip           String
-  port         Int
+  ip   String
+  port Int
 
   order Int @unique
 }
@@ -69,6 +69,18 @@ model News {
   created_at String
 
   redirect_url String
+}
+
+model Notification {
+  /// @kyselyType(`nt_${string}`)
+  id    String @id
+  title String
+  body  String
+
+  /// @kyselyType(Timestamp)
+  created_at String
+
+  hidden Boolean @default(false)
 }
 
 model Session {
