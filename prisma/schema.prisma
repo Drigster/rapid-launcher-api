@@ -47,8 +47,9 @@ model Server {
 
   callback_url String
 
-  ip   String
-  port Int
+  ip         String
+  port       Int
+  query_port Int
 
   order Int @unique
 }

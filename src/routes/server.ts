@@ -185,7 +185,7 @@ router.post("/getServerUser", async (req, res) => {
 	}
 
 	try {
-		const mta = new Client(server.ip, server.port, "rapid_launcher_api", "1234");
+		const mta = new Client(server.ip, server.query_port, "rapid_launcher_api", "1234");
 		const response = await mta.resources.rm_launcher_api
 			.GetUserServerData( 1 )
 			.catch(() => {

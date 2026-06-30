@@ -49,6 +49,7 @@ export type Server = {
     callback_url: string;
     ip: string;
     port: number;
+    query_port: number;
     order: number;
 };
 export type Session = {
