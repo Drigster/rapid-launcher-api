@@ -47,15 +47,13 @@ pnpm run db:push
   - Validation: username 3-20 chars; valid email format; password >= 8 chars.
   - Success: `200` `{ "success": true, "access_token": string, "expires_at": number, "user": null }`
   - Errors: `400` `{ "errors": [...] }` for validation issues.
-  - Notes: if the username or email already exists, the current implementation still returns `200` with `{ "success": true }`.
 
 - **POST** /register/verify
   - Purpose: Verify a newly created account using the pending registration session.
   - Body: `{ "access_token": string, "code": string }`
   - Validation: `access_token` required, `code` required.
   - Success: `200` `{ "success": true, "access_token": string, "expires_at": number, "user": { "id": string, "username": string, "email": string, "verified": boolean } }`
-  - Errors: `400` `{ "errors": [...] }` or `{ "error": "Запрос на подтверждение почты не существует или устарел" }`; `401` `{ "error": "Сессия устарела или недействительна" }` (session invalid).
-  - Notes: the current implementation accepts `code` but does not compare it against the stored verification hash.
+  - Errors: `400` `{ "errors": [...] }` or `{ "error": "Код не верен или устарел" }`; `401` `{ "error": "Сессия устарела или недействительна" }`.
 
 - **POST** /login
   - Purpose: Authenticate a user and create a session.
@@ -104,32 +102,50 @@ pnpm run db:push
   - Body: `{ "access_token": string, "server_id": string }`
   - Validation: both fields required.
   - Success: `200` `{ "success": true }` (user `server_id` updated)
-  - Errors: `400` `{ "errors": [...] }` for validation; `403` `{ "error": "Сессия устарела или недействительна" }` for invalid session; `200` with `{ "error": "Игрок уже находится на сервере" }` when callback confirms existing presence; `500` `{ "error": "Ошибка сервера, попробуйте позже" }` on callback failure.
+  - Errors:
+    - `400` `{ "errors": [...] }` when request validation fails.
+    - `403` `{ "error": "Сессия устарела или недействительна" }` when the session is invalid or expired.
+    - `403` `{ "error": "Игрок уже находится на сервере" }` when the server callback confirms the player is already present.
+    - `500` `{ "error": "Ошибка сервера, попробуйте позже" }` when the server callback or network query fails.
 
 - **POST** /getServers
   - Purpose: Return the list of configured servers for a valid session.
   - Body: `{ "access_token": string }`
   - Validation: `access_token` required.
   - Success: `200` `{ "success": true, "servers": [...] }`
-  - Errors: `400` `{ "errors": [...] }`; `403` `{ "error": "Сессия устарела или недействительна" }`.
+  - Errors:
+    - `400` `{ "errors": [...] }` when request validation fails.
+    - `403` `{ "error": "Сессия устарела или недействительна" }` when the session is invalid or expired.
+
+- **POST** /getServerUser
+  - Purpose: Query a game server for launcher-specific user data.
+  - Body: `{ "access_token": string, "server_id": string }`
+  - Validation: both fields required.
+  - Success: `200` `{ "success": true, "userData": { ... } }`
+  - Errors: `500` `{ "success": false, "error": "Ошибка сервера, попробуйте позже" }` on server/query failures.
 
 - **POST** /checkServer
   - Purpose: Verify that a username belongs to the provided `server_id` (protected route).
-  - Body: `{ "username": string, "server_id": string }` (send an `Authorization: Bearer <token>` header)
-  - Validation: both fields required.
-  - Success: `200` `{ "success": true }` when server_id matches.
-  - Errors: `400` `{ "error": "User does not exist" }`; `403` `{ "error": "Failed to verify server id" }` when mismatch.
+  - Body: `{ "username": string, "server_id": string }`
+  - Auth: Protected by middleware; send `Authorization: Bearer <token>` header or a valid session in body where applicable.
+  - Success: `200` `{ "success": true, "user_id": string }` when server_id matches.
+  - Errors: `400` `{ "success": false, "error": "User does not exist" }`; `403` `{ "success": false, "error": "Failed to verify server id" }` when mismatch.
 
 - **POST** /checkUser (temporary)
   - Purpose: Development dummy endpoint used by server callbacks.
   - Body: `{ "username": string }`
-  - Validation: `username` required.
-  - Success: `200` `{ "success": true }` when username == `test`.
-  - Errors: `200` `{ "success": false }` for other usernames (temporary stub).
+  - Success: `200` `{ "success": true }` when username == `test`, otherwise `{ "success": false }`.
+  - Errors:
+    - `400` `{ "errors": [...] }` when `username` is missing or invalid.
 
-- **POST** /getUser (temporary)
-  - Purpose: Development dummy user lookup endpoint.
-  - Body: `{ "username": string }`
-  - Validation: `username` required.
-  - Success: `200` `{ "success": true }` when username == `test`.
-  - Errors: `200` `{ "success": false }` for other usernames.
+- **GET** /getNews
+  - Purpose: Return site news and featured item.
+  - Success: `200` `{ "success": true, "featured": { ... }, "news": [ ... ] }`
+  - Errors:
+    - `500` `{ "error": "Ошибка сервера, попробуйте позже" }` on database or server errors.
+
+- **GET** /getNotifications
+  - Purpose: Return current visible notifications.
+  - Success: `200` `{ "success": true, "notifications": [ ... ] }`
+  - Errors:
+    - `500` `{ "error": "Ошибка сервера, попробуйте позже" }` on database or server errors.

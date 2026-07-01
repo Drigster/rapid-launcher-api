@@ -129,14 +129,14 @@ router.post("/checkServer", async (req, res) => {
 		.executeTakeFirst();
 
 	if (!user) {
-		return res.status(400).json({ error: "User does not exist" });
+		return res.status(400).json({ success: false, error: "User does not exist" });
 	}
 
 	if (user.server_id != data.output.server_id) {
-		return res.status(403).json({ error: "Failed to verify server id" });
+		return res.status(403).json({ success: false, error: "Failed to verify server id" });
 	}
 
-	return res.status(200).json({ success: true });
+	return res.status(200).json({ success: true, user_id: user.id });
 });
 
 router.post("/getServers", async (req, res) => {
@@ -156,7 +156,7 @@ router.post("/getServers", async (req, res) => {
 			.json({ error: "Сессия устарела или недействительна" });
 	}
 
-	const servers = await db.selectFrom("Server").selectAll().execute();
+	const servers = await db.selectFrom("Server").selectAll().orderBy("order", "asc").execute();
 
 	return res.status(200).json({ success: true, servers });
 });
